@@ -1,6 +1,7 @@
 #!/usr/bin/env python3.5
 # _*_ coding:utf-8 _*_
 from __future__ import absolute_import
+
 import os
 
 from common.celeryConfig import projects
@@ -158,6 +159,7 @@ if __name__ == '__main__':
 
 import errno
 import requests
+import json
 
 from celery.exceptions import Reject
 from %s.celery import app
@@ -172,6 +174,8 @@ def handler(self, payload):
         url = '%s'
         r= requests.post(url,{'payload':payload},timeout=%d)
         r.raise_for_status()
+        data = {"queuename":"%s", "payload":payload}
+        return json.dumps(data)
     except MemoryError as exc:
         raise Reject(exc, requeue=True)
     except OSError as exc:
@@ -179,7 +183,7 @@ def handler(self, payload):
             raise Reject(exc, requeue=True)
     except Exception as exc:
         self.retry(countdown=3, exc=exc, max_retries=3)
-        """ % (queue, queueDic['callback_url'],queueDic['timeout'])
+        """ % (queue, queueDic['callback_url'],queueDic['timeout'],group+'_'+queue)
         self.__touchFile(os.path.join(queuePath, 'task.py'), taskFile)
 
         # touch supervisor file
