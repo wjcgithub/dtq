@@ -1,3 +1,6 @@
 xin1.tar.gz
 log/*
 .idea
+/programs/*
+*__pycache__*
+*.pyc

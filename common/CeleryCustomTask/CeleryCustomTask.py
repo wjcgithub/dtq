@@ -63,6 +63,15 @@ class MyRequest(Request):
               (hostname, queue, type, taskname, taskid, payload, excep, trace, newstime, ctime)
         self.recordTaskInfo(sql,queue,payload,trace,type)
 
+    def on_success(self, failed__retval__runtime, **kwargs):
+        super(MyRequest, self).on_success(self, failed__retval__runtime, **kwargs)
+        failed, retval, runtime = failed__retval__runtime
+        # logger.info(failed__retval__runtime)
+        logger.info("000000000000000000000")
+        logger.info(failed)
+        logger(failed__retval__runtime)
+        raise Exception('pppppppppppppppp')
+
     def recordTaskInfo(self, sql,queue,payload,trace,type):
         CDatabase = CeleryDatabases()
         conn = CDatabase.getConnect()
@@ -87,3 +96,12 @@ class MyRequest(Request):
 
 class Ctask(celery.Task):
     Request = MyRequest
+    # def on_success(self, retval, task_id, args, kwargs):
+    #     super(Ctask, self).on_success(retval, task_id, args, kwargs)
+    #     # logger.info(failed__retval__runtime)
+    #     logger.info("000000000000000000000")
+    #     logger.info(retval)
+    #     logger.info(task_id)
+    #     logger.info(args)
+    #     logger.info(kwargs)
+        # logger.info(self.request)

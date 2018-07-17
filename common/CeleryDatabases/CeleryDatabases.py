@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 import pymysql
-from common.celeryConfig import mysqlconfig as config
+from celeryConfig import mysqlconfig as config
 import warnings
 import logging
 
