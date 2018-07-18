@@ -9,41 +9,48 @@ from common.CeleryDatabases.CeleryDatabases import CeleryDatabases
 from common.clog.clog import logger
 
 class CeleryConfigFile(object):
-    __projectsConfig = None
+    __projectsConfig = {}
     __rootPath = ''
     __programsPath = ''
     __supervisorConfPath = ''
 
     def __init__(self):
-        self.__projectsConfig = projects
-        self.__rootPath = projects.rootPath
-        self.__programsPath = os.path.join(self.__rootPath,'programs')
-        self.__supervisorConfPath = '/etc/supervisor/conf.d/'
+        self.__initConfig()
+        # self.__rootPath = self.__projectsConfig['rootPath']
+        # self.__projectsConfig['programs'] = os.path.join(self.__rootPath,'programs')
+        # self.__supervisorConfPath = '/etc/supervisor/conf.d/'
+
+    def __initConfig(self):
+        sql = 'select name,value from worker_config'
+        cDatabase = CeleryDatabases()
+        configDic = cDatabase.execute_query(sql, return_one=False)
+        if configDic:
+            for one in configDic:
+                self.__projectsConfig[one['name']] = one['value']
 
     def checkConfig(self, group=None, queue=None, gid=0, queueid=0, groupname=''):
         if(self. hasGroup(group)):
             self.__deleteConfig(group=group, queue=queue)
 
         self.__generalConfig(group, queue, gid, queueid, groupname)
-        self.__supervisorRestart()
 
-    def __supervisorRestart(self):
+    def supervisorRestart(self):
         logger.info(os.system('supervisorctl reread'))
         logger.info(os.system('supervisorctl update'))
 
-    def supervisorRestartGroup(self):
-        logger.info(os.system('supervisorctl restart xin_celery'))
+    def supervisorRestartGroup(self,groupname):
+        logger.info(os.system('supervisorctl update '+groupname))
 
     def hasGroup(self, group):
-        if(os.path.exists(os.path.join(self.__programsPath,group))):
+        if(os.path.exists(os.path.join(self.__projectsConfig['programs'],group))):
             return True
         else:
             return False
 
     def __deleteConfig(self, group=None, queue=None):
-        self.__celeryRemoveDir(os.path.join(self.__programsPath,group,queue))
-        self.__celeryRemoveDir(os.path.join(self.__rootPath,'log',group,queue))
-        supervisorFile = os.path.join(self.__supervisorConfPath, group+'_'+queue+'_worker.conf')
+        self.__celeryRemoveDir(os.path.join(self.__projectsConfig['programs'],group,queue))
+        self.__celeryRemoveDir(os.path.join(self.__projectsConfig['celery_log_path'],group,queue))
+        supervisorFile = os.path.join(self.__projectsConfig['supervisor_config_path'], group+'_'+queue+'_worker.conf')
         if(os.path.exists(supervisorFile)):
             os.remove(supervisorFile)
 
@@ -77,17 +84,17 @@ class CeleryConfigFile(object):
         #     qnameStr+=qname['name']
         #     qnameStr+=','
         #组装路径
-        groupPath = os.path.join(self.__programsPath,group)
-        queuePath = os.path.join(self.__programsPath,group,queue)
-        celeryConfigDir = os.path.join(self.__programsPath,group,queue,'celeryconfig')
-        supervisorFile = os.path.join('/etc/supervisor/conf.d/', group+'_'+queue+'_worker.conf')
-        celeryLogPath = os.path.join(self.__rootPath,'log',group,queue)
+        groupPath = os.path.join(self.__projectsConfig['programs'],group)
+        queuePath = os.path.join(self.__projectsConfig['programs'],group,queue)
+        celeryConfigDir = os.path.join(self.__projectsConfig['programs'],group,queue,'celeryconfig')
+        supervisorFile = os.path.join(self.__projectsConfig['supervisor_config_path'], group+'_'+queue+'_worker.conf')
+        celeryLogPath = os.path.join(self.__projectsConfig['celery_log_path'],group,queue)
         os.makedirs(queuePath)
         os.makedirs(celeryConfigDir)
         os.makedirs(celeryLogPath)
-        os.system('setfacl -m u:celery:rwx '+self.__rootPath)
-        os.system('setfacl -d -m u:celery:rwx '+self.__rootPath)
-        os.system('setfacl -R -m u:celery:rwx '+self.__rootPath)
+        os.system('setfacl -m u:celery:rwx '+self.__projectsConfig['rootpath'])
+        os.system('setfacl -d -m u:celery:rwx '+self.__projectsConfig['rootpath'])
+        os.system('setfacl -R -m u:celery:rwx '+self.__projectsConfig['rootpath'])
         self.__touchFile(os.path.join(groupPath,'__init__.py'),'')
         self.__touchFile(os.path.join(queuePath,'__init__.py'),'')
         self.__touchFile(os.path.join(celeryConfigDir,'__init__.py'),'')
@@ -121,17 +128,17 @@ task_ignore_result = False
 task_store_errors_even_if_ignored = True
 worker_enable_remote_control=True
 worker_state_db='%s'
-""" % (self.__projectsConfig.broker_url+self.__projectsConfig.exchange,
-       self.__projectsConfig.result_backend,
+""" % (self.__projectsConfig['broker_url']+self.__projectsConfig['exchange'],
+       self.__projectsConfig['result_backend'],
        queue,
        group+'_'+queue,
-       self.__projectsConfig.exchange,
+       self.__projectsConfig['exchange'],
        group+'_'+queue,
        queue,
        group+'_'+queue,
-       self.__projectsConfig.exchange,
+       self.__projectsConfig['exchange'],
        group + '_' + queue,
-       os.path.join(self.__rootPath,'log/',group,queue,queue)
+       os.path.join(self.__projectsConfig['celery_log_path'],group,queue,queue)
        )
         self.__touchFile(os.path.join(celeryConfigDir,'celeryconfig.py'),celeryConfigFile)
 
@@ -205,7 +212,7 @@ autorestart=true
 startsecs=3
 stopwaitsecs = 600 
 stopasgroup=true
-priority=999
+priority=%d
 
 [group:%s]
 programs=%s
@@ -214,11 +221,12 @@ programs=%s
                group+'_'+queue,
                group+'_'+queue,
                queueDic['concurrency'],
-               os.path.join(self.__rootPath,'log',group,queue+'_worker.log'),
-               os.path.join(self.__programsPath, group),
-               self.__projectsConfig.numprocs,
-               os.path.join(self.__rootPath, 'log', group, queue+'_supervisor.log'),
-               os.path.join(self.__rootPath, 'log', group, queue+'_supervisor_error.log'),
+               os.path.join(self.__projectsConfig['celery_log_path'],group,queue+'_worker.log'),
+               os.path.join(self.__projectsConfig['programs'], group),
+               int(self.__projectsConfig['numprocs']),
+               os.path.join(self.__projectsConfig['celery_log_path'], group, queue+'_supervisor.log'),
+               os.path.join(self.__projectsConfig['celery_log_path'], group, queue+'_supervisor_error.log'),
+               int(self.__projectsConfig['supervisor_priority']),
                groupname,
                group + '_' + queue
                )
@@ -232,6 +240,3 @@ programs=%s
         handler.flush()
         handler.close()
         return True
-
-    def hasQueue(self, queue):
-        pass

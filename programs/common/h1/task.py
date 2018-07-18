@@ -2,6 +2,7 @@ from __future__ import absolute_import, unicode_literals
 
 import errno
 import requests
+import json
 
 from celery.exceptions import Reject
 from h1.celery import app
@@ -16,6 +17,8 @@ def handler(self, payload):
         url = 'http://local.nc.xin.com/test/celery-handler'
         r= requests.post(url,{'payload':payload},timeout=6)
         r.raise_for_status()
+        data = {"queuename":"common_h1", "payload":payload}
+        return json.dumps(data)
     except MemoryError as exc:
         raise Reject(exc, requeue=True)
     except OSError as exc:

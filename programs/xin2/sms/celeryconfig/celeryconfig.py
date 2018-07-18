@@ -1,5 +1,5 @@
 broker_url='amqp://test:test@localhost:5672/first'
-result_backend='redis://localhost/2'
+result_backend='elasticsearch://es1:9200/celery-task/taskinfo'
 task_serializer = 'json'
 result_serializer = 'json'
 accept_content = ['json']
@@ -15,7 +15,7 @@ task_routes = {
     'sms.task.handler': {'queue': 'xin2_sms', 'exchange': 'first', 'routing_key': 'xin2_sms'},
 }
 result_expires = 3600
-result_persistent = True
+# result_persistent = True
 task_time_limit = 5
 task_soft_time_limit = 3
 worker_max_tasks_per_child = 8000
@@ -27,4 +27,4 @@ worker_pool_restarts = True
 task_ignore_result = False
 task_store_errors_even_if_ignored = True
 worker_enable_remote_control=True
-worker_state_db='/home/evolution/PycharmProjects/celery_project/programs/log/xin2/sms/sms'
+worker_state_db='/home/evolution/PycharmProjects/celery_project/log/xin2/sms/sms'

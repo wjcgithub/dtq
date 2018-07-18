@@ -42,9 +42,6 @@ class UpdateConfig():
                     self.__redis.set(self.__restartAllQueueFlag,0)
                     self.__restartAllQueue()
                     logger.info('重启所有服务')
-                else:
-                    logger.info('没有服务需要重启')
-
                 time.sleep(1)
             except Exception as e:
                 logger.error(e, exc_info=True)
@@ -63,7 +60,9 @@ class UpdateConfig():
             group = self.getGroupById(queue['gid'])
             groupName = group['name']
             queueName = queue['name']
-            self.__performConfig(groupName,queueName,queue['gid'], queueid, '')
+            cc = CeleryConfigFile()
+            cc.checkConfig(groupName,queueName,queue['gid'], queueid, '')
+            cc.supervisorRestart()
 
     def getGroupById(self, gid):
         result = None
@@ -71,8 +70,6 @@ class UpdateConfig():
         result = self.__cDatabase.execute_query(sql, return_one=True)
         return result
 
-    def getQueueByGroup(self):
-        pass
 
     def getQueueById(self, id):
         result = None
@@ -80,19 +77,13 @@ class UpdateConfig():
         result = self.__cDatabase.execute_query(sql,return_one=True)
         return result
 
-    def __performConfig(self, group=None, queue=None, gid=0, queueid=0, groupname=''):
-        cc = CeleryConfigFile()
-        cc.checkConfig(group, queue, gid, queueid, groupname)
-
-    def __supervisorRestartGroup(self):
-        cc = CeleryConfigFile()
-        cc.supervisorRestartGroup()
-
     #重启所有队列
     def __restartAllQueue(self):
+        cc = CeleryConfigFile()
         sql = 'select id,name from groups'
         groups = self.__cDatabase.execute_query(sql, return_one=False)
         groupname = 'xin_celery_'+str(time.time())
+        groupname = 'xin_celery'
         if groups:
             for group in groups:
                 logger.info(group['name'])
@@ -105,7 +96,7 @@ class UpdateConfig():
                         logger.info(group['id'])
                         logger.info(queue['id'])
                         logger.info('===============')
-                        self.__performConfig(group['name'], queue['name'], group['id'], queue['id'], groupname)
+                        cc.checkConfig(group['name'], queue['name'], group['id'], queue['id'], groupname)
 
-            self.__supervisorRestartGroup()
+            cc.supervisorRestartGroup(groupname)
 
