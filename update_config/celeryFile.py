@@ -192,21 +192,9 @@ def handler(self, payload):
         """ % (queue, queueDic['callback_url'],queueDic['timeout'],group+'_'+queue)
         self.__touchFile(os.path.join(queuePath, 'task.py'), taskFile)
 
-        # init.sh file
-        initfile = """
-#!/bin/bash
-source %s && celery --app=%s worker -l info -Ofair -n %s.%%h.%%(process_num)d -Q %s -c %d -f %s
-        """ % (pconfig.venvpath,
-               queue,
-               group+'_'+queue,
-               group+'_'+queue,
-               queueDic['concurrency'],
-               os.path.join(self.__projectsConfig['celery_log_path'],group,queue+'_worker_out.log'),)
-        self.__touchFile(os.path.join(queuePath, 'init.sh'), initfile)
-
         # touch supervisor file
         supervisor = """[program:%s]
-command=bash %s
+command=%s --app=%s worker -l info -Ofair -n %s.%%%%h.%%(process_num)d -Q %s -c %d -f %s
 directory=%s
 user=celery
 numprocs=%d
@@ -228,7 +216,12 @@ priority=%d
 [group:%s]
 programs=%s
         """ % (group+'_'+queue,
-               os.path.join(queuePath, 'init.sh'),
+               os.path.join(pconfig.venvpath,'bin/celery'),
+               queue,
+               group+'_'+queue,
+               group+'_'+queue,
+               queueDic['concurrency'],
+               os.path.join(self.__projectsConfig['celery_log_path'],group,queue+'_worker_out.log'),
                os.path.join(self.__projectsConfig['programs'], group),
                int(self.__projectsConfig['numprocs']),
                os.path.join(self.__projectsConfig['celery_log_path'], group, queue+'_supervisor.log'),
