@@ -5,6 +5,7 @@ import os
 
 from common.CeleryDatabases.CeleryDatabases import CeleryDatabases
 from common.clog.clog import logger
+from common.celeryConfig import pconfig as pconfig
 
 class CeleryConfigFile(object):
     __projectsConfig = {}
@@ -45,7 +46,7 @@ class CeleryConfigFile(object):
     def __deleteConfig(self, group=None, queue=None):
         self.__celeryRemoveDir(os.path.join(self.__projectsConfig['programs'],group,queue))
         self.__celeryRemoveDir(os.path.join(self.__projectsConfig['celery_log_path'],group,queue))
-        supervisorFile = os.path.join(self.__projectsConfig['supervisor_config_path'], group+'_'+queue+'_worker.conf')
+        supervisorFile = os.path.join(self.__projectsConfig['supervisor_config_path'], group+'_'+queue+'_worker.'+pconfig.super_file_suffix)
         if(os.path.exists(supervisorFile)):
             os.remove(supervisorFile)
 

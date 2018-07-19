@@ -2,7 +2,6 @@
 from __future__ import absolute_import, unicode_literals
 import html
 import celery
-import pymysql
 import datetime
 
 from celery.worker.request import Request

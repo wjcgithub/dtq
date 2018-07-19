@@ -78,4 +78,7 @@ else
 fi
 
 # install deps
-$pip3path install -U pymysql logging warnings redis celery html flower
+# yum install libffi-devel
+# apt install libffi-dev
+$pip3path install -U setuptools
+$pip3path install -U pymysql redis celery flower elasticsearch
