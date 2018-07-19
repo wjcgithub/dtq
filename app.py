@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python
 # _*_ coding:utf-8 _*_
 import os
 from update_config.updateConfig import UpdateConfig
