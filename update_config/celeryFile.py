@@ -46,7 +46,7 @@ class CeleryConfigFile(object):
     def __deleteConfig(self, group=None, queue=None):
         self.__celeryRemoveDir(os.path.join(self.__projectsConfig['programs'],group,queue))
         self.__celeryRemoveDir(os.path.join(self.__projectsConfig['celery_log_path'],group,queue))
-        supervisorFile = os.path.join(self.__projectsConfig['supervisor_config_path'], group+'_'+queue+'_worker.'+pconfig.super_file_suffix)
+        supervisorFile = os.path.join(pconfig.supervisor_config_path, group+'_'+queue+'_worker.'+pconfig.super_file_suffix)
         if(os.path.exists(supervisorFile)):
             os.remove(supervisorFile)
 
@@ -83,7 +83,7 @@ class CeleryConfigFile(object):
         groupPath = os.path.join(self.__projectsConfig['programs'],group)
         queuePath = os.path.join(self.__projectsConfig['programs'],group,queue)
         celeryConfigDir = os.path.join(self.__projectsConfig['programs'],group,queue,'celeryconfig')
-        supervisorFile = os.path.join(self.__projectsConfig['supervisor_config_path'], group+'_'+queue+'_worker.conf')
+        supervisorFile = os.path.join(pconfig.supervisor_config_path, group+'_'+queue+'_worker.'+pconfig.super_file_suffix)
         celeryLogPath = os.path.join(self.__projectsConfig['celery_log_path'],group,queue)
         os.makedirs(queuePath)
         os.makedirs(celeryConfigDir)
