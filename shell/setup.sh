@@ -64,17 +64,18 @@ then
 else
 	echo "You inputs root path not exists"
 fi
-chown root:$user /etc/supervisor/conf.d
 chown $user:$user $rootpath/log
 chown $user:$user $rootpath/programs
 
 #installing packages of python3
-echo -n "Please input your bin path of pip of python3: "
-read pip3path
-if [ -e $pip3path ]
+echo -n "Please input your supervisor path of conf.d: "
+read supervisorpath
+if [ -d $supervisorpath ]
 then
-	echo "You pip3 bin path is $pip3path"
-	$pip3path install -U pymysql logging warnings redis celery html flower
+	chown root:$user $supervisorpath
 else
-	echo "You inputs bin path of pip not exists"
+	echo "You inputs supervisor conf.d path is not exists"
 fi
+
+# install deps
+$pip3path install -U pymysql logging warnings redis celery html flower
