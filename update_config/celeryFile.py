@@ -17,6 +17,12 @@ class CeleryConfigFile(object):
         self.__initConfig()
 
     def __initConfig(self):
+        # init from config
+        self.__projectsConfig['rootpath'] = pconfig.rootpath
+        self.__projectsConfig['programs'] = os.path.join(pconfig.rootpath,'programs')
+        self.__projectsConfig['celery_log_path'] = os.path.join(pconfig.rootpath,'log')
+
+        # init from database
         sql = 'select name,value from worker_config'
         cDatabase = CeleryDatabases()
         configDic = cDatabase.execute_query(sql, return_one=False)
@@ -88,9 +94,6 @@ class CeleryConfigFile(object):
         os.makedirs(queuePath)
         os.makedirs(celeryConfigDir)
         os.makedirs(celeryLogPath)
-        # os.system('setfacl -m u:celery:rwx '+self.__projectsConfig['rootpath'])
-        # os.system('setfacl -d -m u:celery:rwx '+self.__projectsConfig['rootpath'])
-        # os.system('setfacl -R -m u:celery:rwx '+self.__projectsConfig['rootpath'])
         self.__touchFile(os.path.join(groupPath,'__init__.py'),'')
         self.__touchFile(os.path.join(queuePath,'__init__.py'),'')
         self.__touchFile(os.path.join(celeryConfigDir,'__init__.py'),'')

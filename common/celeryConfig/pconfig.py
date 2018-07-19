@@ -1,3 +1,4 @@
 # -*- coding: utf-8 -*-
-super_file_suffix='conf'
 supervisor_config_path='/etc/supervisor/conf.d'
+super_file_suffix='conf'
+rootpath='/home/evolution/PycharmProjects/celery_project'
