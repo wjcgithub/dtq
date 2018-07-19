@@ -21,12 +21,8 @@ class CeleryDatabases(object):
         self.__conn = pymysql.connect(config.db_host, config.db_user, config.db_pass,config.db_name,
                                       use_unicode=True, charset="utf8", cursorclass=pymysql.cursors.DictCursor)
 
-        return self.__conn
-
-
     def execute_query(self, query, args=(), return_one=False, exec_many=False):
         self.getConnect()
-        sql = 'select * from queues where id = %s' % (id)
         try:
             with self.__conn.cursor() as cursor:
                 cursor.execute('SET NAMES utf8;')

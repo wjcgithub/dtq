@@ -1,10 +1,8 @@
-#!/usr/bin/env python3.5
 # _*_ coding:utf-8 _*_
 from __future__ import absolute_import
 
 import os
 
-from common.celeryConfig import projects
 from common.CeleryDatabases.CeleryDatabases import CeleryDatabases
 from common.clog.clog import logger
 
@@ -16,9 +14,6 @@ class CeleryConfigFile(object):
 
     def __init__(self):
         self.__initConfig()
-        # self.__rootPath = self.__projectsConfig['rootPath']
-        # self.__projectsConfig['programs'] = os.path.join(self.__rootPath,'programs')
-        # self.__supervisorConfPath = '/etc/supervisor/conf.d/'
 
     def __initConfig(self):
         sql = 'select name,value from worker_config'
@@ -92,9 +87,9 @@ class CeleryConfigFile(object):
         os.makedirs(queuePath)
         os.makedirs(celeryConfigDir)
         os.makedirs(celeryLogPath)
-        os.system('setfacl -m u:celery:rwx '+self.__projectsConfig['rootpath'])
-        os.system('setfacl -d -m u:celery:rwx '+self.__projectsConfig['rootpath'])
-        os.system('setfacl -R -m u:celery:rwx '+self.__projectsConfig['rootpath'])
+        # os.system('setfacl -m u:celery:rwx '+self.__projectsConfig['rootpath'])
+        # os.system('setfacl -d -m u:celery:rwx '+self.__projectsConfig['rootpath'])
+        # os.system('setfacl -R -m u:celery:rwx '+self.__projectsConfig['rootpath'])
         self.__touchFile(os.path.join(groupPath,'__init__.py'),'')
         self.__touchFile(os.path.join(queuePath,'__init__.py'),'')
         self.__touchFile(os.path.join(celeryConfigDir,'__init__.py'),'')
@@ -221,7 +216,7 @@ programs=%s
                group+'_'+queue,
                group+'_'+queue,
                queueDic['concurrency'],
-               os.path.join(self.__projectsConfig['celery_log_path'],group,queue+'_worker.log'),
+               os.path.join(self.__projectsConfig['celery_log_path'],group,queue+'_worker_out.log'),
                os.path.join(self.__projectsConfig['programs'], group),
                int(self.__projectsConfig['numprocs']),
                os.path.join(self.__projectsConfig['celery_log_path'], group, queue+'_supervisor.log'),
