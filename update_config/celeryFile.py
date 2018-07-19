@@ -195,7 +195,7 @@ def handler(self, payload):
         # init.sh file
         initfile = """
 #!/bin/bash
-source %s && celery --app=%s worker -l info -Ofair -n %s.%%%%h.%%(process_num)d -Q %s -c %d -f %s
+source %s && celery --app=%s worker -l info -Ofair -n %s.%%h.%%(process_num)d -Q %s -c %d -f %s
         """ % (pconfig.venvpath,
                queue,
                group+'_'+queue,
