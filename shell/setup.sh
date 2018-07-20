@@ -81,4 +81,5 @@ fi
 # yum install libffi-devel
 # apt install libffi-dev
 $pip3path install -U setuptools
+yum install libffi-devel python3-dev
 $pip3path install pymysql redis celery flower elasticsearch requests
