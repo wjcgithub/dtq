@@ -108,3 +108,4 @@ xin1.tar.gz
 log/*
 .idea
 programs/*
+common/celeryConfig
