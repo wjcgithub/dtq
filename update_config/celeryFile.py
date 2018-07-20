@@ -208,7 +208,7 @@ source %s
         # touch supervisor file
         # command = bash % s"%s_%%h_%%(process_num)d"
         supervisor = """[program:%s]
-command=bash %s "%s_%%h_%%(process_num)d"
+command=bash %s %s
 directory=%s
 user=celery
 numprocs=%d
