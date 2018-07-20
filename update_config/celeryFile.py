@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 
 import os
+import time
 
 from common.CeleryDatabases.CeleryDatabases import CeleryDatabases
 from common.clog.clog import logger
@@ -205,8 +206,9 @@ source %s
         self.__touchFile(os.path.join(queuePath, 'init.sh'), initfile)
 
         # touch supervisor file
+        # command = bash % s"%s_%%h_%%(process_num)d"
         supervisor = """[program:%s]
-command=bash %s　"%s_%%%%h_%%(process_num)d"
+command = bash % s"%s_%%h_%%(process_num)d"
 directory=%s
 user=celery
 numprocs=%d
