@@ -90,12 +90,6 @@ class UpdateConfig():
                 queues = self.__cDatabase.execute_query(sql, return_one=False)
                 if queues:
                     for queue in queues:
-                        logger.info(group['name'])
-                        logger.info(queue['name'])
-                        logger.info(group['id'])
-                        logger.info(queue['id'])
-                        logger.info('===============')
                         cc.checkConfig(group['name'], queue['name'], group['id'], queue['id'], groupname)
-
             cc.supervisorRestartGroup(groupname)
 

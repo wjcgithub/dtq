@@ -192,9 +192,21 @@ def handler(self, payload):
         """ % (queue, queueDic['callback_url'],queueDic['timeout'],group+'_'+queue)
         self.__touchFile(os.path.join(queuePath, 'task.py'), taskFile)
 
+        # init.sh file
+        initfile = """#!/bin/bash
+source %s
+%s --app=%s worker -l info -Ofair -n $1 -Q %s -c %d -f %s
+""" % (os.path.join(pconfig.venvpath,'bin/activate'),
+       os.path.join(pconfig.venvpath, 'bin/celery'),
+       queue,
+       group+'_'+queue,
+       queueDic['concurrency'],
+       os.path.join(self.__projectsConfig['celery_log_path'],group,queue+'_worker_out.log'),)
+        self.__touchFile(os.path.join(queuePath, 'init.sh'), initfile)
+
         # touch supervisor file
         supervisor = """[program:%s]
-command=%s --app=%s worker -l info -Ofair -n %s.%%%%h.%%(process_num)d -Q %s -c %d -f %s
+command=bash %s　"%s_%%%%h_%%(process_num)d"
 directory=%s
 user=celery
 numprocs=%d
@@ -215,21 +227,17 @@ priority=%d
 
 [group:%s]
 programs=%s
-        """ % (group+'_'+queue,
-               os.path.join(pconfig.venvpath,'bin/celery'),
-               queue,
-               group+'_'+queue,
-               group+'_'+queue,
-               queueDic['concurrency'],
-               os.path.join(self.__projectsConfig['celery_log_path'],group,queue+'_worker_out.log'),
-               os.path.join(self.__projectsConfig['programs'], group),
-               int(self.__projectsConfig['numprocs']),
-               os.path.join(self.__projectsConfig['celery_log_path'], group, queue+'_supervisor.log'),
-               os.path.join(self.__projectsConfig['celery_log_path'], group, queue+'_supervisor_error.log'),
-               int(self.__projectsConfig['supervisor_priority']),
-               groupname,
-               group + '_' + queue
-               )
+""" % (group+'_'+queue,
+       os.path.join(queuePath, 'init.sh'),
+       group+'_'+queue,
+       os.path.join(self.__projectsConfig['programs'], group),
+       int(self.__projectsConfig['numprocs']),
+       os.path.join(self.__projectsConfig['celery_log_path'], group, queue+'_supervisor.log'),
+       os.path.join(self.__projectsConfig['celery_log_path'], group, queue+'_supervisor_error.log'),
+       int(self.__projectsConfig['supervisor_priority']),
+       groupname,
+       group + '_' + queue
+       )
         self.__touchFile(supervisorFile, supervisor)
         logger.info('mk queue %s of %s group success' % (queue,group))
 
