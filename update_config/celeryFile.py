@@ -231,7 +231,7 @@ priority=%d
 programs=%s
 """ % (group+'_'+queue,
        os.path.join(queuePath, 'init.sh'),
-       group+'_'+queue,
+       group+'_'+queue+str(time.time()),
        os.path.join(self.__projectsConfig['programs'], group),
        int(self.__projectsConfig['numprocs']),
        os.path.join(self.__projectsConfig['celery_log_path'], group, queue+'_supervisor.log'),
