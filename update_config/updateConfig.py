@@ -6,7 +6,7 @@ import sys
 import os
 sys.path.append(os.path.abspath('.')+'/common')
 from celeryConfig import redisconfig
-form celeryConfig import pconfig
+from celeryConfig import pconfig
 from CeleryDatabases.CeleryDatabases import CeleryDatabases
 from update_config.celeryFile import CeleryConfigFile
 from clog.clog import logger
