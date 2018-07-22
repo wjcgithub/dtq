@@ -246,7 +246,6 @@ programs=%s
         logger.info('mk queue %s of %s group success' % (queue,group))
 
     def __touchFile(self, filename='', content=''):
-        print(content)
         handler = open(filename, 'a+')
         handler.write('')
         handler.write(content)
