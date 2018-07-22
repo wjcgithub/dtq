@@ -109,3 +109,5 @@ log/*
 .idea
 programs/*
 common/celeryConfig
+test
+update_config/__pycache__/*

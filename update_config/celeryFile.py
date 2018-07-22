@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 
 import os
+import random
 import time
 
 from common.CeleryDatabases.CeleryDatabases import CeleryDatabases
@@ -127,7 +128,8 @@ worker_pool_restarts = True
 task_ignore_result = False
 task_store_errors_even_if_ignored = True
 worker_enable_remote_control=True
-worker_state_db='%s'
+worker_state_db=''
+timezone='Asia/Shanghai'
 """ % (self.__projectsConfig['broker_url']+self.__projectsConfig['exchange'],
        self.__projectsConfig['result_backend'],
        queue,
@@ -138,7 +140,7 @@ worker_state_db='%s'
        group+'_'+queue,
        self.__projectsConfig['exchange'],
        group + '_' + queue,
-       os.path.join(self.__projectsConfig['celery_log_path'],group,queue,queue)
+       # os.path.join(self.__projectsConfig['celery_log_path'],group,queue,queue)
        )
         self.__touchFile(os.path.join(celeryConfigDir,'celeryconfig.py'),celeryConfigFile)
 
@@ -196,9 +198,9 @@ def handler(self, payload):
         # init.sh file
         initfile = """#!/bin/bash
 source %s
-%s --app=%s worker -l info -Ofair -n $1 -Q %s -c %d -f %s
+celery --app=%s worker -l info -Ofair -n $1 -Q %s -c %d -f %s
 """ % (os.path.join(pconfig.venvpath,'bin/activate'),
-       os.path.join(pconfig.venvpath, 'bin/celery'),
+       # os.path.join(pconfig.venvpath, 'bin/celery'),
        queue,
        group+'_'+queue,
        queueDic['concurrency'],
@@ -208,7 +210,7 @@ source %s
         # touch supervisor file
         # command = bash % s"%s_%%h_%%(process_num)d"
         supervisor = """[program:%s]
-command=bash %s %s
+command=bash %s %s_%%%%h_%%(process_num)d
 directory=%s
 user=celery
 numprocs=%d
@@ -231,7 +233,7 @@ priority=%d
 programs=%s
 """ % (group+'_'+queue,
        os.path.join(queuePath, 'init.sh'),
-       group+'_'+queue+str(time.time()),
+       group+'_'+queue,
        os.path.join(self.__projectsConfig['programs'], group),
        int(self.__projectsConfig['numprocs']),
        os.path.join(self.__projectsConfig['celery_log_path'], group, queue+'_supervisor.log'),
@@ -244,6 +246,7 @@ programs=%s
         logger.info('mk queue %s of %s group success' % (queue,group))
 
     def __touchFile(self, filename='', content=''):
+        print(content)
         handler = open(filename, 'a+')
         handler.write('')
         handler.write(content)
