@@ -6,6 +6,7 @@ import sys
 import os
 sys.path.append(os.path.abspath('.')+'/common')
 from celeryConfig import redisconfig
+form celeryConfig import pconfig
 from CeleryDatabases.CeleryDatabases import CeleryDatabases
 from update_config.celeryFile import CeleryConfigFile
 from clog.clog import logger
@@ -21,7 +22,7 @@ class UpdateConfig():
     def __init__(self):
         self.__redisPool()
         self.__changeKey = 'celery:changelist'
-        self.__restartAllQueueFlag = 'celery:restartallqueue'
+        self.__restartAllQueueFlag = 'celery:restartallqueue'+pconfig.hostname
         self.__cDatabase = CeleryDatabases()
 
     def start(self):
