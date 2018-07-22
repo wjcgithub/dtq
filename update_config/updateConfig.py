@@ -22,7 +22,7 @@ class UpdateConfig():
     def __init__(self):
         self.__redisPool()
         self.__changeKey = 'celery:changelist'
-        self.__restartAllQueueFlag = 'celery:restartallqueue'+pconfig.hostname
+        self.__restartAllQueueFlag = 'celery:restartallqueue:'+pconfig.hostname
         self.__cDatabase = CeleryDatabases()
 
     def start(self):
@@ -38,10 +38,11 @@ class UpdateConfig():
 
                 # 重启所有队列
                 restart = self.__redis.get(self.__restartAllQueueFlag)
-                if (restart.decode('utf-8')=='1'):
-                    self.__redis.set(self.__restartAllQueueFlag,0)
-                    self.__restartAllQueue()
-                    logger.info('重启所有服务')
+                if restart:
+                    if (restart.decode('utf-8')=='1'):
+                        self.__redis.set(self.__restartAllQueueFlag,0)
+                        self.__restartAllQueue()
+                        logger.info('重启所有服务')
                 time.sleep(1)
             except Exception as e:
                 logger.error(e, exc_info=True)
