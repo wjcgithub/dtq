@@ -43,7 +43,7 @@ class CeleryConfigFile(object):
         logger.info(os.system('supervisorctl update'))
 
     def supervisorRestartGroup(self,groupname):
-        logger.info(os.system('supervisorctl update '+groupname))
+        logger.info(os.system('supervisorctl update'))
 
     def hasGroup(self, group):
         if(os.path.exists(os.path.join(self.__projectsConfig['programs'],group))):
@@ -93,9 +93,12 @@ class CeleryConfigFile(object):
         celeryConfigDir = os.path.join(self.__projectsConfig['programs'],group,queue,'celeryconfig')
         supervisorFile = os.path.join(pconfig.supervisor_config_path, group+'_'+queue+'_worker.'+pconfig.super_file_suffix)
         celeryLogPath = os.path.join(self.__projectsConfig['celery_log_path'],group,queue)
-        os.makedirs(queuePath)
-        os.makedirs(celeryConfigDir)
-        os.makedirs(celeryLogPath)
+        if (not os.path.exists(queuePath)):
+            os.makedirs(queuePath)
+        if (not os.path.isdir(celeryConfigDir)):
+            os.makedirs(celeryConfigDir)
+        if (not os.path.isdir(celeryLogPath)):
+            os.makedirs(celeryLogPath)
         self.__touchFile(os.path.join(groupPath,'__init__.py'),'')
         self.__touchFile(os.path.join(queuePath,'__init__.py'),'')
         self.__touchFile(os.path.join(celeryConfigDir,'__init__.py'),'')
@@ -169,10 +172,12 @@ if __name__ == '__main__':
 import errno
 import requests
 import json
+import traceback
 
 from celery.exceptions import Reject
 from %s.celery import app
 from CeleryCustomTask.CeleryCustomTask import Ctask
+from clog.clog import logger
 
 @app.task(
           base=Ctask,
@@ -191,17 +196,19 @@ def handler(self, payload):
         if exc.errno == errno.ENOMEM:
             raise Reject(exc, requeue=True)
     except Exception as exc:
+        logger.error('Task failure, payload is %s', (payload), format(exc), traceback.format_exc())
         self.retry(countdown=3, exc=exc, max_retries=3)
-        """ % (queue, queueDic['callback_url'],queueDic['timeout'],group+'_'+queue)
+""" % (queue, queueDic['callback_url'],queueDic['timeout'],group+'_'+queue, '%s, mes:%s, trace:%s')
         self.__touchFile(os.path.join(queuePath, 'task.py'), taskFile)
 
         # init.sh file
         initfile = """#!/bin/bash
 source %s
-celery --app=%s worker -l info -Ofair -n $1 -Q %s -c %d -f %s
+celery --app=%s worker -l %s -Ofair -n $1 -Q %s -c %d -f %s
 """ % (os.path.join(pconfig.venvpath,'bin/activate'),
        # os.path.join(pconfig.venvpath, 'bin/celery'),
        queue,
+       pconfig.log_level,
        group+'_'+queue,
        queueDic['concurrency'],
        os.path.join(self.__projectsConfig['celery_log_path'],group,queue+'_worker_out.log'),)

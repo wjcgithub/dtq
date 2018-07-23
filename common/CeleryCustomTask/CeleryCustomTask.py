@@ -66,10 +66,10 @@ class MyRequest(Request):
         super(MyRequest, self).on_success(self, failed__retval__runtime, **kwargs)
         failed, retval, runtime = failed__retval__runtime
         # logger.info(failed__retval__runtime)
-        logger.info("000000000000000000000")
-        logger.info(failed)
-        logger(failed__retval__runtime)
-        raise Exception('pppppppppppppppp')
+        # logger.info("000000000000000000000")
+        # logger.info(failed)
+        # logger(failed__retval__runtime)
+        # raise Exception('pppppppppppppppp')
 
     def recordTaskInfo(self, sql,queue,payload,trace,type):
         CDatabase = CeleryDatabases()
@@ -88,6 +88,8 @@ class MyRequest(Request):
                          +"---type: " +str(type))
         finally:
             conn.close()
+            del conn
+            del CDatabase
 
     def decodeHtml(self, input):
         s = html.escape(input)
