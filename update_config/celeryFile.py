@@ -82,8 +82,10 @@ class CeleryConfigFile(object):
     def generalConfig(self, group=None, queue=None, gid=0, queueid=0, groupname=''):
         cDatabase = CeleryDatabases()
         #查询队列详情
-        sql = 'select * from queues where id=%s' % (queueid)
+        sql = 'select * from queues where id=%s and status=1' % (queueid)
         queueDic = cDatabase.execute_query(sql, return_one=True)
+        if(not queueDic):
+            return False
         #查询该组中的所有队列
         # sql = 'select name from queues where gid=%d' % (gid)
         # queueNameDic = cDatabase.execute_query(sql)

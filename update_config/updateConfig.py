@@ -99,28 +99,28 @@ class UpdateConfig():
 
     def getGroupById(self, gid):
         result = None
-        sql = 'select * from groups where id = %s' % (gid)
+        sql = 'select * from groups where id = %s and status=1' % (gid)
         result = self.__cDatabase.execute_query(sql, return_one=True)
         return result
 
 
     def getQueueById(self, id):
         result = None
-        sql = 'select * from queues where id = %s' % (id)
+        sql = 'select * from queues where id = %s and status=1' % (id)
         result = self.__cDatabase.execute_query(sql,return_one=True)
         return result
 
     #重启所有队列
     def __restartAllQueue(self):
         cc = CeleryConfigFile()
-        sql = 'select id,name from groups'
+        sql = 'select id,name from groups and status=1'
         groups = self.__cDatabase.execute_query(sql, return_one=False)
         groupname = 'xin_celery_'+str(time.time())
         groupname = 'xin_celery'
         if groups:
             for group in groups:
                 logger.info(group['name'])
-                sql = 'select id,name from queues where gid = %s' % (group['id'])
+                sql = 'select id,name from queues where gid = %s and status=1' % (group['id'])
                 queues = self.__cDatabase.execute_query(sql, return_one=False)
                 if queues:
                     for queue in queues:
