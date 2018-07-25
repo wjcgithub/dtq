@@ -22,6 +22,7 @@ class UpdateConfig():
     def __init__(self):
         self.__redisPool()
         self.__changeKey = 'celery:changelist'
+        self.__deleteKey = 'celery:deletelist'
         self.__restartAllQueueFlag = 'celery:restartallqueue:'+pconfig.hostname
         self.__cDatabase = CeleryDatabases()
 
@@ -30,6 +31,12 @@ class UpdateConfig():
         # 处理新加和更新的任务，　一律为add任务，　先删除后添加
         while(True):
             try:
+                #移除队列
+                members = self.__redis.smembers(self.__deleteKey)
+                for queueid in members:
+                    self.__performUpdate(queueid.decode())
+                    self.__redis.srem(self.__deleteKey, queueid.decode())
+
                 # 处理变更的队列
                 members = self.__redis.smembers(self.__changeKey)
                 for queueid in members:
@@ -53,9 +60,34 @@ class UpdateConfig():
     def __getRedis(self):
         self.__redis = redis.Redis(connection_pool=self.__pool)
 
-    def __performUpdate(self, queueid):
+    def __deleteQueue(self, queueid):
         queue = None
         group = None
+        queue = self.getQueueById(queueid)
+        if queue is not None:
+            group = self.getGroupById(queue['gid'])
+            groupName = group['name']
+            queueName = queue['name']
+            cc = CeleryConfigFile()
+            cc.checkConfig(groupName, queueName, queue['gid'], queueid, '')
+            cc.supervisorRestart()
+
+    def __deleteQueue(self, queueid):
+        queue = ''
+        group = ''
+        queue = self.getQueueById(queueid)
+        if queue is not None:
+            group = self.getGroupById(queue['gid'])
+            groupName = group['name']
+            queueName = queue['name']
+            cc = CeleryConfigFile()
+            if(cc.hasGroup(group)):
+                cc.deleteConfig(groupName,queueName)
+                cc.supervisorRestart()
+
+    def __performUpdate(self, queueid):
+        queue = ''
+        group = ''
         queue = self.getQueueById(queueid)
         if queue is not None:
             group = self.getGroupById(queue['gid'])

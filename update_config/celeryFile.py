@@ -34,15 +34,16 @@ class CeleryConfigFile(object):
 
     def checkConfig(self, group=None, queue=None, gid=0, queueid=0, groupname=''):
         if(self. hasGroup(group)):
-            self.__deleteConfig(group=group, queue=queue)
+            self.deleteConfig(group=group, queue=queue)
 
-        self.__generalConfig(group, queue, gid, queueid, groupname)
+        self.generalConfig(group, queue, gid, queueid, groupname)
 
     def supervisorRestart(self):
         logger.info(os.system('supervisorctl reread'))
         logger.info(os.system('supervisorctl update'))
 
     def supervisorRestartGroup(self,groupname):
+        #@todo centos update group 不支持，ｕbuntu 可以
         logger.info(os.system('supervisorctl update'))
 
     def hasGroup(self, group):
@@ -51,9 +52,12 @@ class CeleryConfigFile(object):
         else:
             return False
 
-    def __deleteConfig(self, group=None, queue=None):
+    def deleteConfig(self, group=None, queue=None):
+        #delete programs file
         self.__celeryRemoveDir(os.path.join(self.__projectsConfig['programs'],group,queue))
+        #delete log file
         self.__celeryRemoveDir(os.path.join(self.__projectsConfig['celery_log_path'],group,queue))
+        #delete supervisor file
         supervisorFile = os.path.join(pconfig.supervisor_config_path, group+'_'+queue+'_worker.'+pconfig.super_file_suffix)
         if(os.path.exists(supervisorFile)):
             os.remove(supervisorFile)
@@ -75,7 +79,7 @@ class CeleryConfigFile(object):
         except Exception as e:
             logger.error('查询数据错误:%s' % (e))
 
-    def __generalConfig(self, group=None, queue=None, gid=0, queueid=0, groupname=''):
+    def generalConfig(self, group=None, queue=None, gid=0, queueid=0, groupname=''):
         cDatabase = CeleryDatabases()
         #查询队列详情
         sql = 'select * from queues where id=%s' % (queueid)
