@@ -77,9 +77,18 @@ else
 	echo "You inputs supervisor conf.d path is not exists"
 fi
 
+
+echo -n "Please input your pyenv path: "
+read pyenvpath
+if [ ! -e $pyenvpath ]
+then
+	echo "You inputs supervisor conf.d path is not exists"
+	exit
+fi
+
 # install deps
 # yum install libffi-devel
 # apt install libffi-dev
-$pip3path install -U setuptools
+$pip3path/bin/pip install - setuptools
 yum install libffi-devel python3-dev
-$pip3path install pymysql redis celery flower elasticsearch requests
+$pip3path/bin/pip install pymysql redis celery flower elasticsearch requests
