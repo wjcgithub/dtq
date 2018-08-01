@@ -24,7 +24,7 @@ class CeleryDatabases(object):
                 else:
                     cursor.execute(query, args)
         except Exception as e:
-            logger.error('查询数据错误:%s' % (query))
+            logger.error('查询数据错误:%s' % (str(query)))
         finally:
             conn.close()
             del conn

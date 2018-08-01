@@ -33,11 +33,11 @@ EOF
       else
         touch $rootpath/common/celeryConfig/mysqlconfig.py
         cat>$rootpath/common/celeryConfig/mysqlconfig.py<<EOF
-    # -*- coding: utf-8 -*-
-    db_host = ''
-    db_user = ''
-    db_pass = ''
-    db_name = '2'
+# -*- coding: utf-8 -*-
+db_host = ''
+db_user = ''
+db_pass = ''
+db_name = '2'
 EOF
         fi
 echo "mysqlconfig touch success"
