@@ -35,7 +35,7 @@ checkPython()
 
     echo Your python version is OK!
 }
-checkPython
+#checkPython
 
 # create user
 user=celery
