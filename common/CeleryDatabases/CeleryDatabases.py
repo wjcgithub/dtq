@@ -2,14 +2,7 @@
 from __future__ import absolute_import
 import pymysql
 from celeryConfig import mysqlconfig as config
-import warnings
-import logging
-
-warnings.filterwarnings('error', category=pymysql.err.Warning)
-# use logging module for easy debug
-logging.basicConfig(format='%(asctime)s %(levelname)8s: %(message)s', datefmt='%m-%d %H:%M:%S')
-logger = logging.getLogger(__name__)
-logger.setLevel('WARNING')
+from clog.clog import logger
 
 class CeleryDatabases(object):
 

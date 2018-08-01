@@ -4,7 +4,7 @@
 
 checkPython()
 {
-    #推荐版本V2.6.5
+    #推荐版本V3.5
     V1=3
     V2=5
     V3=all
