@@ -40,7 +40,7 @@ EOF
     db_name = '2'
 EOF
         fi
-echo "mysqlconfig success"
+echo "mysqlconfig touch success"
 
 # touch pconfig
     if [ -e $rootpath/common/celeryConfig/pconfig.py ]
@@ -71,7 +71,7 @@ hostname=''
 log_level='info'
 EOF
         fi
-echo "pconfig success"
+echo "pconfig touch success"
 
 #touch redisconfig
 
@@ -97,7 +97,7 @@ port = 6379
 db = 0
 EOF
         fi
-echo "redisconfig success"
+echo "redisconfig touch success"
 
 
 
