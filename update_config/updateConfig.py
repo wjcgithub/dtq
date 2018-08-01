@@ -113,7 +113,7 @@ class UpdateConfig():
     #重启所有队列
     def __restartAllQueue(self):
         cc = CeleryConfigFile()
-        sql = 'select id,name from groups and status=1'
+        sql = 'select id,name from groups where status=1'
         groups = self.__cDatabase.execute_query(sql, return_one=False)
         groupname = 'xin_celery_'+str(time.time())
         groupname = 'xin_celery'
