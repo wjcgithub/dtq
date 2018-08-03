@@ -173,11 +173,11 @@ if __name__ == '__main__':
 
         # touch task.py
         taskFile = """from __future__ import absolute_import, unicode_literals
-
 import errno
 import requests
 import json
 import traceback
+import hashlib
 
 from celery.exceptions import Reject
 from %s.celery import app
@@ -190,11 +190,16 @@ from clog.clog import logger
           )
 def handler(self, payload):
     try:
-        url = '%s'
-        r= requests.post(url,{'payload':payload},timeout=%d)
+        obj = json.loads(payload)
+        url = obj['c']
+        payload = obj['p']
+        sign = genearteMD5(str(payload)+obj['k'])
+        r= requests.post(url,{'payload':payload,'sign':sign})
         r.raise_for_status()
-        data = {"queuename":"%s", "payload":payload}
+        data = {'queuename':'%s', 'payload':payload, 'result':r.text}
         return json.dumps(data)
+        
+        
     except MemoryError as exc:
         raise Reject(exc, requeue=True)
     except OSError as exc:
@@ -203,7 +208,12 @@ def handler(self, payload):
     except Exception as exc:
         logger.error('Task failure, payload is %s', (payload), format(exc), traceback.format_exc())
         self.retry(countdown=3, exc=exc, max_retries=3)
-""" % (queue, queueDic['callback_url'],queueDic['timeout'],group+'_'+queue, '%s, mes:%s, trace:%s')
+
+def genearteMD5(str):
+    hl = hashlib.md5()
+    hl.update(str.encode(encoding='utf-8'))
+    return hl.hexdigest()
+""" % (queue,group+'_'+queue, '%s, mes:%s, trace:%s')
         self.__touchFile(os.path.join(queuePath, 'task.py'), taskFile)
 
         # init.sh file
