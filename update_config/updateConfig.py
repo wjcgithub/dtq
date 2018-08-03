@@ -21,8 +21,8 @@ class UpdateConfig():
 
     def __init__(self):
         self.__redisPool()
-        self.__changeKey = 'celery:changelist'
-        self.__deleteKey = 'celery:deletelist'
+        self.__changeKey = 'celery:changelist'+pconfig.hostname
+        self.__deleteKey = 'celery:deletelist'+pconfig.hostname
         self.__restartAllQueueFlag = 'celery:restartallqueue:'+pconfig.hostname
         self.__cDatabase = CeleryDatabases()
 
@@ -34,7 +34,7 @@ class UpdateConfig():
                 #移除队列
                 members = self.__redis.smembers(self.__deleteKey)
                 for queueid in members:
-                    self.__performUpdate(queueid.decode())
+                    self.__deleteQueue(queueid.decode())
                     self.__redis.srem(self.__deleteKey, queueid.decode())
 
                 # 处理变更的队列
@@ -45,6 +45,7 @@ class UpdateConfig():
 
                 # 重启所有队列
                 restart = self.__redis.get(self.__restartAllQueueFlag)
+
                 if restart:
                     if (restart.decode('utf-8')=='1'):
                         self.__redis.set(self.__restartAllQueueFlag,0)
@@ -59,18 +60,6 @@ class UpdateConfig():
 
     def __getRedis(self):
         self.__redis = redis.Redis(connection_pool=self.__pool)
-
-    def __deleteQueue(self, queueid):
-        queue = None
-        group = None
-        queue = self.getQueueById(queueid)
-        if queue is not None:
-            group = self.getGroupById(queue['gid'])
-            groupName = group['name']
-            queueName = queue['name']
-            cc = CeleryConfigFile()
-            cc.checkConfig(groupName, queueName, queue['gid'], queueid, '')
-            cc.supervisorRestart()
 
     def __deleteQueue(self, queueid):
         queue = ''

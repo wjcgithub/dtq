@@ -154,8 +154,7 @@ timezone='Asia/Shanghai'
         self.__touchFile(os.path.join(celeryConfigDir,'celeryconfig.py'),celeryConfigFile)
 
         # touch celery.py
-        celeryFile = """#!/usr/bin/env python3.5
-# _*_ coding:utf-8 _*_
+        celeryFile = """# _*_ coding:utf-8 _*_
 from __future__ import absolute_import, unicode_literals
 from celery import Celery
 import %s.celeryconfig.celeryconfig as celeryconfig
