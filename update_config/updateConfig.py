@@ -21,8 +21,8 @@ class UpdateConfig():
 
     def __init__(self):
         self.__redisPool()
-        self.__changeKey = 'celery:changelist'+pconfig.hostname
-        self.__deleteKey = 'celery:deletelist'+pconfig.hostname
+        self.__changeKey = 'celery:changelist:'+pconfig.hostname
+        self.__deleteKey = 'celery:deletelist:'+pconfig.hostname
         self.__restartAllQueueFlag = 'celery:restartallqueue:'+pconfig.hostname
         self.__cDatabase = CeleryDatabases()
 
@@ -51,7 +51,7 @@ class UpdateConfig():
                         self.__redis.set(self.__restartAllQueueFlag,0)
                         self.__restartAllQueue()
                         logger.info('重启所有服务')
-                time.sleep(1)
+                time.sleep(2)
             except Exception as e:
                 logger.error(e, exc_info=True)
 
@@ -70,9 +70,10 @@ class UpdateConfig():
             groupName = group['name']
             queueName = queue['name']
             cc = CeleryConfigFile()
-            if(cc.hasGroup(group)):
+            if(cc.hasGroup(groupName)):
                 cc.deleteConfig(groupName,queueName)
                 cc.supervisorRestart()
+                logger.warning('delete queue %s of %s group success' % (queueName, groupName))
 
     def __performUpdate(self, queueid):
         queue = ''
@@ -88,14 +89,14 @@ class UpdateConfig():
 
     def getGroupById(self, gid):
         result = None
-        sql = 'select * from groups where id = %s and status=1' % (gid)
+        sql = 'select * from groups where id = %s' % (gid)
         result = self.__cDatabase.execute_query(sql, return_one=True)
         return result
 
 
     def getQueueById(self, id):
         result = None
-        sql = 'select * from queues where id = %s and status=1' % (id)
+        sql = 'select * from queues where id = %s' % (id)
         result = self.__cDatabase.execute_query(sql,return_one=True)
         return result
 
@@ -104,11 +105,10 @@ class UpdateConfig():
         cc = CeleryConfigFile()
         sql = 'select id,name from groups where status=1'
         groups = self.__cDatabase.execute_query(sql, return_one=False)
-        groupname = 'xin_celery_'+str(time.time())
+        # groupname = 'xin_celery_'+str(time.time())
         groupname = 'xin_celery'
         if groups:
             for group in groups:
-                logger.info(group['name'])
                 sql = 'select id,name from queues where gid = %s and status=1' % (group['id'])
                 queues = self.__cDatabase.execute_query(sql, return_one=False)
                 if queues:

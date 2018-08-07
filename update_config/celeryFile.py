@@ -39,12 +39,12 @@ class CeleryConfigFile(object):
         self.generalConfig(group, queue, gid, queueid, groupname)
 
     def supervisorRestart(self):
-        logger.info(os.system('supervisorctl reread'))
-        logger.info(os.system('supervisorctl update'))
+        logger.warning(os.system('supervisorctl reread'))
+        logger.warning(os.system('supervisorctl update'))
 
     def supervisorRestartGroup(self,groupname):
         #@todo centos update group 不支持，ｕbuntu 可以
-        logger.info(os.system('supervisorctl update'))
+        logger.warning(os.system('supervisorctl update'))
 
     def hasGroup(self, group):
         if(os.path.exists(os.path.join(self.__projectsConfig['programs'],group))):
@@ -62,9 +62,10 @@ class CeleryConfigFile(object):
         if(os.path.exists(supervisorFile)):
             os.remove(supervisorFile)
 
-        logger.info('delete queue %s of %s group success' % (queue,group))
+        logger.warning('delete queue %s of %s group success' % (queue,group))
 
     def __celeryRemoveDir(self, dirPath=''):
+        print(dirPath)
         if not os.path.isdir(dirPath):
             return
         files = os.listdir(dirPath)
@@ -234,7 +235,7 @@ command=bash %s %s_%%%%h_%%(process_num)d
 directory=%s
 user=celery
 numprocs=%d
-process_name=%%(program_name)s%%(process_num)d@%%(host_node_name)s
+process_name=%%(program_name)s_%%(process_num)d@%%(host_node_name)s
 numprocs_start=1
 stdout_logfile=%s
 stderr_logfile=%s
@@ -263,7 +264,7 @@ programs=%s
        group + '_' + queue
        )
         self.__touchFile(supervisorFile, supervisor)
-        logger.info('mk queue %s of %s group success' % (queue,group))
+        logger.warning('mk queue %s of %s group success' % (queue,group))
 
     def __touchFile(self, filename='', content=''):
         handler = open(filename, 'a+')
