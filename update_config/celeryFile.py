@@ -193,12 +193,10 @@ def handler(self, payload):
         obj = json.loads(payload)
         url = obj['c']
         payload = obj['p']
-        sign = genearteMD5(str(payload)+obj['k'])
-        r= requests.post(url,{'payload':payload,'sign':sign})
+        r= requests.post(url,{'payload':payload})
         r.raise_for_status()
         data = {'queuename':'%s', 'payload':payload, 'result':r.text}
         return json.dumps(data)
-        
         
     except MemoryError as exc:
         raise Reject(exc, requeue=True)
