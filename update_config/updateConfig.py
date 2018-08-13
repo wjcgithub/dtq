@@ -45,7 +45,6 @@ class UpdateConfig():
 
                 # 重启所有队列
                 restart = self.__redis.get(self.__restartAllQueueFlag)
-
                 if restart:
                     if (restart.decode('utf-8')=='1'):
                         self.__redis.set(self.__restartAllQueueFlag,0)
@@ -62,42 +61,36 @@ class UpdateConfig():
         self.__redis = redis.Redis(connection_pool=self.__pool)
 
     def __deleteQueue(self, queueid):
-        queue = ''
-        group = ''
         queue = self.getQueueById(queueid)
         if queue is not None:
             group = self.getGroupById(queue['gid'])
-            groupName = group['name']
-            queueName = queue['name']
-            cc = CeleryConfigFile()
-            if(cc.hasGroup(groupName)):
-                cc.deleteConfig(groupName,queueName)
-                cc.supervisorRestart()
-                logger.warning('delete queue %s of %s group success' % (queueName, groupName))
+            if group is not None:
+                groupName = group['name']
+                queueName = queue['name']
+                cc = CeleryConfigFile()
+                if(cc.hasGroup(groupName)):
+                    cc.deleteConfig(groupName,queueName)
+                    cc.supervisorRestart()
+                    logger.warning('delete queue %s of %s group success' % (queueName, groupName))
 
     def __performUpdate(self, queueid):
         queue = ''
         group = ''
-        queue = self.getQueueById(queueid)
+        queue = self.getQueueById(queueid, status=1)
         if queue is not None:
-            group = self.getGroupById(queue['gid'])
+            group = self.getGroupById(queue['gid'],status=1)
             groupName = group['name']
             queueName = queue['name']
             cc = CeleryConfigFile()
             cc.checkConfig(groupName,queueName,queue['gid'], queueid, '')
             cc.supervisorRestart()
 
-    def getGroupById(self, gid):
-        result = None
-        sql = 'select * from groups where id = %s' % (gid)
-        result = self.__cDatabase.execute_query(sql, return_one=True)
+    def getGroupById(self, gid, status=None):
+        result = self.__cDatabase.get_group_by_status(gid, status=status)
         return result
 
-
-    def getQueueById(self, id):
-        result = None
-        sql = 'select * from queues where id = %s' % (id)
-        result = self.__cDatabase.execute_query(sql,return_one=True)
+    def getQueueById(self, qid, status=None):
+        result = self.__cDatabase.get_queue_by_status(qid, status=status)
         return result
 
     #重启所有队列

@@ -179,6 +179,8 @@ import requests
 import json
 import traceback
 import hashlib
+import os
+import base64
 
 from celery.exceptions import Reject
 from %s.celery import app
@@ -192,12 +194,21 @@ from clog.clog import logger
 def handler(self, payload):
     try:
         obj = json.loads(payload)
-        url = obj['c']
+        # callback | command
+        dispatch = obj['c']
+        # payload
         payload = obj['p']
-        r= requests.post(url,{'payload':payload})
-        r.raise_for_status()
-        data = {'queuename':'%s', 'payload':payload, 'result':r.text}
-        return json.dumps(data)
+        # message type
+        type = obj['t']
+        # exec command
+        if type == 'c':
+            return os.system('%%s %%s' %% (dispatch, base64.b64encode(payload)))
+        # exec url callback
+        elif type == 'u':
+            r= requests.post(dispatch,{'payload':payload})
+            r.raise_for_status()
+            data = {'queuename':'%s', 'payload':payload, 'result':r.text}
+            return json.dumps(data)
         
     except MemoryError as exc:
         raise Reject(exc, requeue=True)
@@ -220,7 +231,6 @@ def genearteMD5(str):
 source %s
 celery --app=%s worker -l %s -Ofair -n $1 -Q %s -c %d -f %s
 """ % (os.path.join(pconfig.venvpath,'bin/activate'),
-       # os.path.join(pconfig.venvpath, 'bin/celery'),
        queue,
        pconfig.log_level,
        group+'_'+queue,
