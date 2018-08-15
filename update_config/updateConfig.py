@@ -8,7 +8,7 @@ sys.path.append(os.path.abspath('.')+'/common')
 from celeryConfig import redisconfig
 from celeryConfig import pconfig
 from CeleryDatabases.CeleryDatabases import CeleryDatabases
-from update_config.celeryFile import CeleryConfigFile
+from .celeryFile import CeleryConfigFile
 from clog.clog import logger
 
 
@@ -91,14 +91,14 @@ class UpdateConfig():
         """重启所有队列"""
         cc = CeleryConfigFile()
         groups = self.__cDatabase.get_group_by_status(status=1,return_one=False)
-        groupname = 'xin_celery'
+        supervisorGroupName = 'xin_celery'
         if groups:
             for group in groups:
                 queues = self.__cDatabase.get_queue_by_status(gid=group.id, status=1, return_one=False)
                 if queues:
                     for queue in queues:
-                        cc.checkConfig(self.__generateGroupName(group.id), queue.name, group.id, queue.id, groupname)
-            cc.supervisorRestartGroup(groupname)
+                        cc.checkConfig(self.__generateGroupName(group.id), queue.name, group.id, queue.id, supervisorGroupName)
+            cc.supervisorRestartGroup(supervisorGroupName)
 
     def __generateGroupName(self,oldname):
         return 'group'+str(oldname)

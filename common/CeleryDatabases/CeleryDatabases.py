@@ -3,12 +3,12 @@ from __future__ import absolute_import
 
 from contextlib import contextmanager
 
-from CeleryDatabases.Models import FailTasks
 from .session import SessionManager
 from celeryConfig import mysqlconfig as config
 from clog.clog import logger
 from .Models.Groups import Groups
 from .Models.Queues import Queues
+from .Models.FailTasks import FailTasks
 from .Models.WorkConfig import WorkConfig
 
 

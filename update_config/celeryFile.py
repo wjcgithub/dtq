@@ -1,9 +1,9 @@
 # _*_ coding:utf-8 _*_
 from __future__ import absolute_import
 import os
-from common.CeleryDatabases.CeleryDatabases import CeleryDatabases
-from common.clog.clog import logger
-from common.celeryConfig import pconfig as pconfig
+from CeleryDatabases.CeleryDatabases import CeleryDatabases
+from clog.clog import logger
+from celeryConfig import pconfig as pconfig
 
 class CeleryConfigFile(object):
     __projectsConfig = {}
@@ -77,7 +77,7 @@ class CeleryConfigFile(object):
         cDatabase = CeleryDatabases()
         #查询队列详情
         queueObj = cDatabase.get_queue_by_status(qid=queueid, status=1, return_one=True)
-        if queueObj is not None:
+        if queueObj is None:
             return False
         #组装路径
         groupPath = os.path.join(self.__projectsConfig['programs'],group)
