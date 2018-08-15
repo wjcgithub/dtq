@@ -8,7 +8,8 @@ class Groups(Base):
 
     id = Column('id', Integer, primary_key=True)
     name = Column(String(45), nullable=False)
-    mastername = Column(String(45), nullable=False)
-    ctime = Column(DateTime, nullable=False)
+    masterid = Column(Integer, nullable=False)
     lastmasterid = Column(Integer)
     status = Column(String(1))
+    lasttime = Column(DateTime, nullable=False)
+    ctime = Column(DateTime, nullable=False)

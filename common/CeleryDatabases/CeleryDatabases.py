@@ -3,11 +3,14 @@ from __future__ import absolute_import
 
 from contextlib import contextmanager
 
+from CeleryDatabases.Models import FailTasks
 from .session import SessionManager
 from celeryConfig import mysqlconfig as config
 from clog.clog import logger
 from .Models.Groups import Groups
 from .Models.Queues import Queues
+from .Models.WorkConfig import WorkConfig
+
 
 class CeleryDatabases(object):
 
@@ -50,13 +53,16 @@ class CeleryDatabases(object):
 
         return None
 
-    def get_queue_by_status(self,qid=None,return_one=False,status=None):
+    def get_queue_by_status(self,qid=None,gid=None,return_one=False,status=None):
         """Get queue meta-data for a queue by id."""
         session = self.getSession()
-        q = session.query(Queues).filter(Queues.id == qid)
+        q = session.query(Queues)
         with self.session_cleanup(session):
             if qid is not None:
                 q = q.filter(Queues.id == qid)
+
+            if gid is not None:
+                q = q.filter(Queues.gid == gid)
 
             if status is not None:
                 q = q.filter(Queues.status == status)
@@ -66,3 +72,33 @@ class CeleryDatabases(object):
                 return rest
 
         return None
+
+    def get_workerconfig(self):
+        """Get work config."""
+        session = self.getSession()
+        with self.session_cleanup(session):
+            rest = session.query(WorkConfig).all()
+            if rest:
+                return rest
+
+        return None
+
+    def inster_fail_task(self,hostname, queue, type, taskname, taskid, payload, excep, trace, newstime, ctime):
+        """Get work config."""
+        session = self.getSession()
+        with self.session_cleanup(session):
+            Obj = FailTasks(
+                hostname=hostname,
+                queue=queue,
+                type=type,
+                taskname=taskname,
+                taskid=taskid,
+                payload=payload,
+                exception=excep,
+                trace=trace,
+                stime=newstime,
+                ctime=ctime
+            )
+            session.add(Obj)
+            session.commit()
+        return True
