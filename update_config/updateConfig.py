@@ -61,51 +61,44 @@ class UpdateConfig():
         self.__redis = redis.Redis(connection_pool=self.__pool)
 
     def __deleteQueue(self, queueid):
-        queue = self.getQueueById(queueid)
+        """删除队列"""
+        queue = self.__cDatabase.get_queue_by_status(qid=int(queueid), return_one=True)
         if queue is not None:
-            group = self.getGroupById(queue['gid'])
+            group = self.__cDatabase.get_group_by_status(gid=int(queue.gid), status=1, return_one=True)
             if group is not None:
-                groupName = group['name']
-                queueName = queue['name']
+                groupName = self.__generateGroupName(group.id)
+                queueName = queue.name
                 cc = CeleryConfigFile()
                 if(cc.hasGroup(groupName)):
-                    cc.deleteConfig(groupName,queueName)
+                    cc.deleteConfig(group=groupName, queue=queueName)
                     cc.supervisorRestart()
                     logger.warning('delete queue %s of %s group success' % (queueName, groupName))
 
     def __performUpdate(self, queueid):
-        queue = ''
-        group = ''
-        queue = self.getQueueById(queueid, status=1)
+        """处理队列更新"""
+        queue = self.__cDatabase.get_queue_by_status(qid=int(queueid), status=1, return_one=True)
         if queue is not None:
-            group = self.getGroupById(queue['gid'],status=1)
-            groupName = group['name']
-            queueName = queue['name']
-            cc = CeleryConfigFile()
-            cc.checkConfig(groupName,queueName,queue['gid'], queueid, '')
-            cc.supervisorRestart()
+            group = self.__cDatabase.get_group_by_status(gid=int(queue.gid), status=1, return_one=True)
+            if group is not None:
+                groupName = self.__generateGroupName(group.id)
+                queueName = queue.name
+                cc = CeleryConfigFile()
+                cc.checkConfig(groupName,queueName,queue['gid'], queueid, '')
+                cc.supervisorRestart()
+                logger.warning('update queue %s of %s group success' % (queueName, groupName))
 
-    def getGroupById(self, gid, status=None):
-        result = self.__cDatabase.get_group_by_status(gid, status=status)
-        return result
-
-    def getQueueById(self, qid, status=None):
-        result = self.__cDatabase.get_queue_by_status(qid, status=status)
-        return result
-
-    #重启所有队列
     def __restartAllQueue(self):
+        """重启所有队列"""
         cc = CeleryConfigFile()
-        sql = 'select id,name from groups where status=1'
-        groups = self.__cDatabase.execute_query(sql, return_one=False)
-        # groupname = 'xin_celery_'+str(time.time())
+        groups = self.__cDatabase.get_group_by_status(status=1,return_one=False)
         groupname = 'xin_celery'
         if groups:
             for group in groups:
-                sql = 'select id,name from queues where gid = %s and status=1' % (group['id'])
-                queues = self.__cDatabase.execute_query(sql, return_one=False)
+                queues = self.__cDatabase.get_queue_by_status(gid=group.id, status=1, return_one=False)
                 if queues:
                     for queue in queues:
-                        cc.checkConfig(group['name'], queue['name'], group['id'], queue['id'], groupname)
+                        cc.checkConfig(self.__generateGroupName(group.id), queue.name, group.id, queue.id, groupname)
             cc.supervisorRestartGroup(groupname)
 
+    def __generateGroupName(self,oldname):
+        return 'group'+str(oldname)

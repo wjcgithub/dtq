@@ -1,10 +1,6 @@
 # _*_ coding:utf-8 _*_
 from __future__ import absolute_import
-
 import os
-import random
-import time
-
 from common.CeleryDatabases.CeleryDatabases import CeleryDatabases
 from common.clog.clog import logger
 from common.celeryConfig import pconfig as pconfig
@@ -25,24 +21,23 @@ class CeleryConfigFile(object):
         self.__projectsConfig['celery_log_path'] = os.path.join(pconfig.rootpath,'log')
 
         # init from database
-        sql = 'select name,value from worker_config'
         cDatabase = CeleryDatabases()
-        configDic = cDatabase.execute_query(sql, return_one=False)
+        configDic = cDatabase.get_workerconfig()
         if configDic:
             for one in configDic:
-                self.__projectsConfig[one['name']] = one['value']
+                self.__projectsConfig[one.name] = one.value
 
-    def checkConfig(self, group=None, queue=None, gid=0, queueid=0, groupname=''):
+    def checkConfig(self, group=None, queue=None, gid=0, queueid=0, supervisorGroupName=''):
         if(self. hasGroup(group)):
             self.deleteConfig(group=group, queue=queue)
 
-        self.generalConfig(group, queue, gid, queueid, groupname)
+        self.generalConfig(group, queue, gid, queueid, supervisorGroupName)
 
     def supervisorRestart(self):
         logger.warning(os.system('supervisorctl reread'))
         logger.warning(os.system('supervisorctl update'))
 
-    def supervisorRestartGroup(self,groupname):
+    def supervisorRestartGroup(self,supervisorGroupName):
         #@todo centos update group 不支持，ｕbuntu 可以
         logger.warning(os.system('supervisorctl update'))
 
@@ -61,11 +56,9 @@ class CeleryConfigFile(object):
         supervisorFile = os.path.join(pconfig.supervisor_config_path, group+'_'+queue+'_worker.'+pconfig.super_file_suffix)
         if(os.path.exists(supervisorFile)):
             os.remove(supervisorFile)
-
         logger.warning('delete queue %s of %s group success' % (queue,group))
 
     def __celeryRemoveDir(self, dirPath=''):
-        print(dirPath)
         if not os.path.isdir(dirPath):
             return
         files = os.listdir(dirPath)
@@ -80,20 +73,12 @@ class CeleryConfigFile(object):
         except Exception as e:
             logger.error('查询数据错误:%s' % (e))
 
-    def generalConfig(self, group=None, queue=None, gid=0, queueid=0, groupname=''):
+    def generalConfig(self, group=None, queue=None, gid=0, queueid=0, supervisorGroupName=''):
         cDatabase = CeleryDatabases()
         #查询队列详情
-        sql = 'select * from queues where id=%s and status=1' % (queueid)
-        queueDic = cDatabase.execute_query(sql, return_one=True)
-        if(not queueDic):
+        queueObj = cDatabase.get_queue_by_status(qid=queueid, status=1, return_one=True)
+        if queueObj is not None:
             return False
-        #查询该组中的所有队列
-        # sql = 'select name from queues where gid=%d' % (gid)
-        # queueNameDic = cDatabase.execute_query(sql)
-        # qnameStr = ''
-        # for qname in queueNameDic:
-        #     qnameStr+=qname['name']
-        #     qnameStr+=','
         #组装路径
         groupPath = os.path.join(self.__projectsConfig['programs'],group)
         queuePath = os.path.join(self.__projectsConfig['programs'],group,queue)
@@ -127,10 +112,10 @@ task_routes = {
 }
 result_expires = 3600
 # result_persistent = True
-task_time_limit = 5
-task_soft_time_limit = 3
-worker_max_tasks_per_child = 8000
-worker_max_memory_per_child = 50000
+task_time_limit = %s
+task_soft_time_limit = %s
+worker_max_tasks_per_child = %s
+worker_max_memory_per_child = %s
 task_acks_late = True
 task_reject_on_worker_lost = True   # Warning Enabling this can cause message loops; make sure you know what you're doing
 worker_prefetch_multiplier = 0
@@ -150,6 +135,10 @@ timezone='Asia/Shanghai'
        group+'_'+queue,
        self.__projectsConfig['exchange'],
        group + '_' + queue,
+       int(queueObj.timeout)+5,
+       queueObj.timeout,
+       queueObj.tasks_number,
+       queueObj.memory
        # os.path.join(self.__projectsConfig['celery_log_path'],group,queue,queue)
        )
         self.__touchFile(os.path.join(celeryConfigDir,'celeryconfig.py'),celeryConfigFile)
@@ -234,7 +223,7 @@ celery --app=%s worker -l %s -Ofair -n $1 -Q %s -c %d -f %s
        queue,
        pconfig.log_level,
        group+'_'+queue,
-       queueDic['concurrency'],
+       queueObj.concurrency,
        os.path.join(self.__projectsConfig['celery_log_path'],group,queue+'_worker_out.log'),)
         self.__touchFile(os.path.join(queuePath, 'init.sh'), initfile)
 
@@ -243,7 +232,7 @@ celery --app=%s worker -l %s -Ofair -n $1 -Q %s -c %d -f %s
         supervisor = """[program:%s]
 command=bash %s %s_%%%%h_%%(process_num)d
 directory=%s
-user=celery
+user=%s
 numprocs=%d
 process_name=%%(program_name)s_%%(process_num)d@%%(host_node_name)s
 numprocs_start=1
@@ -266,11 +255,12 @@ programs=%s
        os.path.join(queuePath, 'init.sh'),
        group+'_'+queue,
        os.path.join(self.__projectsConfig['programs'], group),
+       queueObj.executor,
        int(self.__projectsConfig['numprocs']),
        os.path.join(self.__projectsConfig['celery_log_path'], group, queue+'_supervisor.log'),
        os.path.join(self.__projectsConfig['celery_log_path'], group, queue+'_supervisor_error.log'),
        int(self.__projectsConfig['supervisor_priority']),
-       groupname,
+       supervisorGroupName,
        group + '_' + queue
        )
         self.__touchFile(supervisorFile, supervisor)
