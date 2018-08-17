@@ -83,7 +83,7 @@ class UpdateConfig():
                 groupName = self.__generateGroupName(group.id)
                 queueName = queue.name
                 cc = CeleryConfigFile()
-                cc.checkConfig(groupName,queueName,queue['gid'], queueid, '')
+                cc.checkConfig(groupName,queueName,queue.gid, queueid, '')
                 cc.supervisorRestart()
                 logger.warning('update queue %s of %s group success' % (queueName, groupName))
 
