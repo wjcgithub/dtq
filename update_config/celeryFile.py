@@ -191,7 +191,7 @@ def handler(self, payload):
         type = obj['t']
         # exec command
         if type == '2':
-            return os.system('%%s %%s' %% (dispatch, base64.b64encode(payload)))
+            return os.system('%%s %%s' %% (dispatch, payload))
         # exec url callback
         elif type == '1':
             r= requests.post(dispatch,{'payload':payload})
