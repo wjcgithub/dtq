@@ -14,3 +14,6 @@ inspect_timeout=60000.0
 persistent=True
 port=5555
 task_columns="name, uuid, state, args, kwargs, result, received, started, runtime"
+timezone='Asia/Shanghai'
+# resolve Substantial drift
+event_queue_ttl=300
