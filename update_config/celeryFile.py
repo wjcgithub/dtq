@@ -190,10 +190,10 @@ def handler(self, payload):
         # message type
         type = obj['t']
         # exec command
-        if type == 'c':
+        if type == '2':
             return os.system('%%s %%s' %% (dispatch, base64.b64encode(payload)))
         # exec url callback
-        elif type == 'u':
+        elif type == '1':
             r= requests.post(dispatch,{'payload':payload})
             r.raise_for_status()
             data = {'queuename':'%s', 'payload':payload, 'result':r.text}
